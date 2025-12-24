@@ -76,12 +76,16 @@ extension OSCTCPServer.ClientConnection: _OSCTCPHandlerProtocol {
         tcpSocket.delegateQueue ?? .global()
     }
     
-    var timeTagMode: OSCTimeTagMode {
-        delegate?.oscServer?.timeTagMode ?? .ignore
+    var _bundleMode: OSCBundleMode {
+        delegate?.oscServer?._bundleMode ?? .unwrap(timeTagMode: .ignore)
     }
     
     var receiveHandler: OSCHandlerBlock? {
         delegate?.oscServer?.receiveHandler
+    }
+    
+    var receiveBundleHandler: OSCBundleHandlerBlock? {
+        delegate?.oscServer?.receiveBundleHandler
     }
 }
 

@@ -26,13 +26,18 @@ public final class OSCTCPClient {
     let tcpDelegate: OSCTCPClientDelegate
     let queue: DispatchQueue
     var receiveHandler: OSCHandlerBlock?
+    var receiveBundleHandler: OSCBundleHandlerBlock?
     var notificationHandler: NotificationHandlerBlock?
     
     /// Notification handler closure.
     public typealias NotificationHandlerBlock = @Sendable (_ notification: Notification) -> Void
     
-    /// Time tag mode. Determines how OSC bundle time tags are handled.
-    public var timeTagMode: OSCTimeTagMode
+    /// Bundle mode. Determines how OSC bundles are handled.
+    public var bundleMode: OSCBundleMode {
+        get { queue.sync { _bundleMode }}
+        set { queue.sync { _bundleMode = newValue }}
+    }
+    internal var _bundleMode: OSCBundleMode
     
     /// Remote network hostname.
     public let remoteHost: String
@@ -60,28 +65,33 @@ public final class OSCTCPClient {
     ///   - remoteHost: Remote hostname or IP address.
     ///   - remotePort: Remote port number.
     ///   - interface: Optionally specify a network interface for which to constrain connections.
-    ///   - timeTagMode: OSC TimeTag mode. (Default is recommended.)
+    ///   - bundleMode: OSC Bundle mode. (Default is recommended.)
     ///   - framingMode: TCP framing mode. Both server and client must use the same framing mode. (Default is recommended.)
     ///   - queue: Optionally supply a custom dispatch queue for receiving OSC packets and dispatching the
     ///     handler callback closure. If `nil`, a dedicated internal background queue will be used.
-    ///   - receiveHandler: Handler to call when OSC bundles or messages are received.
+    ///   - receiveHandler: Handler to call when OSC messages are received, or OSC bundles and
+    ///     ``OSCBundleMode`` is set to `.unwrap`.
+    ///   - receiveBundleHandler: Handler to call when OSC bundles are received and ``OSCBundleMode``
+    ///     is set to `.forward`.
     public init(
         remoteHost: String,
         remotePort: UInt16,
         interface: String? = nil,
-        timeTagMode: OSCTimeTagMode = .ignore,
+        bundleMode: OSCBundleMode = .unwrap(timeTagMode: .ignore),
         framingMode: OSCTCPFramingMode = .osc1_1,
         queue: DispatchQueue? = nil,
-        receiveHandler: OSCHandlerBlock? = nil
+        receiveHandler: OSCHandlerBlock? = nil,
+        receiveBundleHandler: OSCBundleHandlerBlock? = nil
     ) {
         self.remoteHost = remoteHost
         self.remotePort = remotePort
         self.interface = interface
-        self.timeTagMode = timeTagMode
+        self._bundleMode = bundleMode
         self.framingMode = framingMode
         let queue = queue ?? DispatchQueue(label: "com.orchetect.OSCKit.OSCTCPClient.queue")
         self.queue = queue
         self.receiveHandler = receiveHandler
+        self.receiveBundleHandler = receiveBundleHandler
         
         tcpDelegate = OSCTCPClientDelegate()
         tcpSocket = GCDAsyncSocket(delegate: tcpDelegate, delegateQueue: queue, socketQueue: nil)
@@ -156,12 +166,24 @@ extension OSCTCPClient: _OSCTCPHandlerProtocol {
 
 extension OSCTCPClient {
     /// Set the receive handler closure.
-    /// This closure will be called when OSC bundles or messages are received.
+    /// This closure will be called when OSC messages are received, or when
+    /// OSC bundles are received if ``OSCBundleMode`` is set to `.unwrap`.
     public func setReceiveHandler(
         _ handler: OSCHandlerBlock?
     ) {
         queue.async {
             self.receiveHandler = handler
+        }
+    }
+    
+    /// Set the receive handler closure.
+    /// This closure will be called when OSC bundles are received if
+    /// ``OSCBundleMode`` is to set `.forward`.
+    public func setReceiveBundleHandler(
+        _ handler: OSCBundleHandlerBlock?
+    ) {
+        queue.async {
+            self.receiveBundleHandler = handler
         }
     }
     

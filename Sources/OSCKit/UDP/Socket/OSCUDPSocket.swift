@@ -26,9 +26,14 @@ public final class OSCUDPSocket {
     let udpDelegate = OSCUDPServerDelegate()
     let queue: DispatchQueue
     var receiveHandler: OSCHandlerBlock?
+    var receiveBundleHandler: OSCBundleHandlerBlock?
     
-    /// Time tag mode. Determines how OSC bundle time tags are handled.
-    public var timeTagMode: OSCTimeTagMode
+    /// Bundle mode. Determines how OSC bundles are handled.
+    public var bundleMode: OSCBundleMode {
+        get { queue.sync { _bundleMode }}
+        set { queue.sync { _bundleMode = newValue }}
+    }
+    internal var _bundleMode: OSCBundleMode
     
     /// Remote network hostname.
     /// If non-nil, this host will be used in calls to ``send(_:to:port:)-(OSCPacket,_,_)``. The host may still be
@@ -104,31 +109,36 @@ public final class OSCUDPSocket {
     ///   - remotePort: Remote port on the remote host machine to send outbound OSC packets to.
     ///     If `nil` or `0`, the `localPort` value will be used.
     ///   - interface: Optionally specify a network interface for which to constrain communication.
-    ///   - timeTagMode: OSC time-tag mode. The default is recommended.
+    ///   - bundleMode: OSC Bundle mode. (Default is recommended.)
     ///   - isIPv4BroadcastEnabled: Enable sending IPv4 broadcast messages from the socket.
     ///     See ``isIPv4BroadcastEnabled`` for more details.
     ///   - queue: Optionally supply a custom dispatch queue for receiving OSC packets and dispatching the
     ///     handler callback closure. If `nil`, a dedicated internal background queue will be used.
-    ///   - receiveHandler: Handler to call when OSC bundles or messages are received.
+    ///   - receiveHandler: Handler to call when OSC messages are received, or OSC bundles and
+    ///     ``OSCBundleMode`` is set to `.unwrap`.
+    ///   - receiveBundleHandler: Handler to call when OSC bundles are received and ``OSCBundleMode``
+    ///     is set to `.forward`.
     public init(
         localPort: UInt16? = nil,
         remoteHost: String? = nil,
         remotePort: UInt16? = nil,
         interface: String? = nil,
-        timeTagMode: OSCTimeTagMode = .ignore,
+        bundleMode: OSCBundleMode = .unwrap(timeTagMode: .ignore),
         isIPv4BroadcastEnabled: Bool = false,
         queue: DispatchQueue? = nil,
-        receiveHandler: OSCHandlerBlock? = nil
+        receiveHandler: OSCHandlerBlock? = nil,
+        receiveBundleHandler: OSCBundleHandlerBlock? = nil
     ) {
         self.remoteHost = remoteHost
         _localPort = (localPort == nil || localPort == 0) ? nil : localPort
         _remotePort = (remotePort == nil || remotePort == 0) ? nil : remotePort
         self.interface = interface
-        self.timeTagMode = timeTagMode
+        self._bundleMode = bundleMode
         self.isIPv4BroadcastEnabled = isIPv4BroadcastEnabled
         let queue = queue ?? DispatchQueue(label: "com.orchetect.OSCKit.OSCUDPSocket.queue")
         self.queue = queue
         self.receiveHandler = receiveHandler
+        self.receiveBundleHandler = receiveBundleHandler
         
         udpSocket = GCDAsyncUdpSocket(delegate: udpDelegate, delegateQueue: queue, socketQueue: nil)
         udpDelegate.oscServer = self
@@ -239,12 +249,24 @@ extension OSCUDPSocket: _OSCHandlerProtocol { }
 
 extension OSCUDPSocket {
     /// Set the receive handler closure.
-    /// This closure will be called when OSC bundles or messages are received.
+    /// This closure will be called when OSC messages are received, or when
+    /// OSC bundles are received if ``OSCBundleMode`` is set to `.unwrap`.
     public func setReceiveHandler(
         _ handler: OSCHandlerBlock?
     ) {
         queue.async {
             self.receiveHandler = handler
+        }
+    }
+    
+    /// Set the receive handler closure.
+    /// This closure will be called when OSC bundles are received if
+    /// ``OSCBundleMode`` is to set `.forward`.
+    public func setReceiveBundleHandler(
+        _ handler: OSCBundleHandlerBlock?
+    ) {
+        queue.async {
+            self.receiveBundleHandler = handler
         }
     }
 }

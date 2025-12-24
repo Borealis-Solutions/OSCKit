@@ -7,11 +7,12 @@
 import Foundation
 import OSCKitCore
 
-/// Internal protocol that TCP-based OSC classes adopt in order to handle incoming OSC data.
+/// Internal protocol that TCP or UDP based receiver OSC classes adopt in order to handle incoming OSC data.
 protocol _OSCHandlerProtocol: AnyObject where Self: Sendable {
     var queue: DispatchQueue { get }
-    var timeTagMode: OSCTimeTagMode { get }
+    var _bundleMode: OSCBundleMode { get }
     var receiveHandler: OSCHandlerBlock? { get }
+    var receiveBundleHandler: OSCBundleHandlerBlock? { get }
 }
 
 // MARK: - Handle and Dispatch
@@ -21,21 +22,40 @@ extension _OSCHandlerProtocol {
     func _handle(
         packet: OSCPacket,
         timeTag: OSCTimeTag = .immediate(),
+        timeTagMode: OSCTimeTagMode? = nil,
         remoteHost: String,
         remotePort: UInt16
     ) {
         queue.async {
             switch packet {
             case let .bundle(bundle):
-                for element in bundle.elements {
-                    self._handle(
-                        packet: element,
-                        timeTag: bundle.timeTag,
-                        remoteHost: remoteHost,
-                        remotePort: remotePort
-                    )
+                // If present, previously unwrapped bundle
+                if let timeTagMode {
+                    for element in bundle.elements {
+                        self._handle(
+                            packet: element,
+                            timeTag: bundle.timeTag,
+                            timeTagMode: timeTagMode,
+                            remoteHost: remoteHost,
+                            remotePort: remotePort
+                        )
+                    }
+                } else {
+                    switch self._bundleMode {
+                    case .forward:
+                        self._dispatch(bundle, remoteHost: remoteHost, remotePort: remotePort)
+                    case .unwrap(let timeTagMode):
+                        for element in bundle.elements {
+                            self._handle(
+                                packet: element,
+                                timeTag: bundle.timeTag,
+                                timeTagMode: timeTagMode,
+                                remoteHost: remoteHost,
+                                remotePort: remotePort
+                            )
+                        }
+                    }
                 }
-                
             case let .message(message):
                 self._schedule(
                     message,
@@ -50,10 +70,11 @@ extension _OSCHandlerProtocol {
     private func _schedule(
         _ message: OSCMessage,
         at timeTag: OSCTimeTag = .immediate(),
+        timeTagMode: OSCTimeTagMode = .ignore,
         remoteHost: String,
         remotePort: UInt16
     ) {
-        switch self.timeTagMode {
+        switch timeTagMode {
         case .ignore:
             _dispatch(message, timeTag: timeTag, remoteHost: remoteHost, remotePort: remotePort)
             
@@ -90,6 +111,16 @@ extension _OSCHandlerProtocol {
     ) {
         queue.async {
             self.receiveHandler?(message, timeTag, remoteHost, remotePort)
+        }
+    }
+    
+    private func _dispatch(
+        _ bundle: OSCBundle,
+        remoteHost: String,
+        remotePort: UInt16
+    ) {
+        queue.async {
+            self.receiveBundleHandler?(bundle, remoteHost, remotePort)
         }
     }
     
