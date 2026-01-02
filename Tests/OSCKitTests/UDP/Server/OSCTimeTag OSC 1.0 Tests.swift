@@ -13,7 +13,7 @@ import Testing
     @Test
     func defaultTimeTag() async throws {
         try await confirmation(expectedCount: 1) { confirmation in
-            let server = OSCUDPServer(timeTagMode: .osc1_0)
+            let server = OSCUDPServer(bundleMode: .unwrap(timeTagMode: .osc1_0))
             
             server.setReceiveHandler { _, _, _, _ in
                 confirmation()
@@ -32,7 +32,7 @@ import Testing
     @Test
     func immediate() async throws {
         try await confirmation(expectedCount: 1) { confirmation in
-            let server = OSCUDPServer(timeTagMode: .osc1_0)
+            let server = OSCUDPServer(bundleMode: .unwrap(timeTagMode: .osc1_0))
             
             server.setReceiveHandler { _, _, _, _ in
                 confirmation()
@@ -52,7 +52,7 @@ import Testing
     @Test
     func now() async throws {
         try await confirmation(expectedCount: 1) { confirmation in
-            let server = OSCUDPServer(timeTagMode: .osc1_0)
+            let server = OSCUDPServer(bundleMode: .unwrap(timeTagMode: .osc1_0))
             
             server.setReceiveHandler { _, _, _, _ in
                 confirmation()
@@ -95,7 +95,7 @@ import Testing
     @Test(.enabled(if: isSystemTimingStable()))
     func oneSecondInFuture_OnTimeOrThereafter() async throws {
         try await confirmation(expectedCount: 1) { confirmation in
-            let server = OSCUDPServer(timeTagMode: .osc1_0)
+            let server = OSCUDPServer(bundleMode: .unwrap(timeTagMode: .osc1_0))
             
             server.setReceiveHandler { _, _, _, _ in
                 confirmation()
@@ -116,7 +116,7 @@ import Testing
     @Test
     func past() async throws {
         try await confirmation(expectedCount: 1) { confirmation in
-            let server = OSCUDPServer(timeTagMode: .osc1_0)
+            let server = OSCUDPServer(bundleMode: .unwrap(timeTagMode: .osc1_0))
             
             server.setReceiveHandler { _, _, _, _ in
                 confirmation()

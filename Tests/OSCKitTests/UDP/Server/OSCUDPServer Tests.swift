@@ -131,7 +131,7 @@ struct OSCUDPServer_Tests {
         let isFlakey = !isSystemTimingStable()
         
         // selects a random available port
-        let server = OSCUDPServer(port: nil, timeTagMode: .ignore, queue: nil, receiveHandler: nil)
+        let server = OSCUDPServer(port: nil, bundleMode: .unwrap(timeTagMode: .ignore), queue: nil, receiveHandler: nil)
         try await Task.sleep(seconds: isFlakey ? 5.0 : 0.1)
         
         try server.start()

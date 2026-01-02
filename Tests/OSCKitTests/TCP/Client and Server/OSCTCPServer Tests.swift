@@ -18,7 +18,7 @@ struct OSCTCPServer_Tests {
         _ = iteration // argument value not used, just a mechanism to repeat the test X number of times
         
         // we aren't starting the server, so passing port 0 or nil has no meaningful effect
-        let server = OSCTCPServer(port: nil, timeTagMode: .ignore)
+        let server = OSCTCPServer(port: nil, bundleMode: .unwrap(timeTagMode: .ignore))
         
         final actor Receiver {
             var messages: [(message: OSCMessage, host: String, port: UInt16)] = []
@@ -69,7 +69,7 @@ struct OSCTCPServer_Tests {
     @MainActor @Test
     func stressTestOffline() async throws {
         // we aren't starting the server, so passing port 0 or nil has no meaningful effect
-        let server = OSCTCPServer(port: nil, timeTagMode: .ignore)
+        let server = OSCTCPServer(port: nil, bundleMode: .unwrap(timeTagMode: .ignore))
         
         final actor Receiver {
             var messages: [OSCMessage] = []
@@ -120,7 +120,7 @@ struct OSCTCPServer_Tests {
         // setup server
         
         // binding to port 0 or nil will cause the system to assign a random available port
-        let server = OSCTCPServer(port: nil, timeTagMode: .ignore, framingMode: framingMode)
+        let server = OSCTCPServer(port: nil, bundleMode: .unwrap(timeTagMode: .ignore), framingMode: framingMode)
         try await Task.sleep(seconds: isStable ? 0.1 : 5.0)
         
         try server.start()
@@ -131,7 +131,7 @@ struct OSCTCPServer_Tests {
         // setup client
         // (must be done after calling start on server so we have a non-zero local server port to use)
         
-        let client = OSCTCPClient(remoteHost: "localhost", remotePort: server.localPort, timeTagMode: .ignore, framingMode: framingMode)
+        let client = OSCTCPClient(remoteHost: "localhost", remotePort: server.localPort, bundleMode: .unwrap(timeTagMode: .ignore), framingMode: framingMode)
         try await Task.sleep(seconds: isStable ? 0.1 : 5.0)
         
         try client.connect()
@@ -221,7 +221,7 @@ struct OSCTCPServer_Tests {
         // setup server
         
         // binding to port 0 or nil will cause the system to assign a random available port
-        let server = OSCTCPServer(port: nil, timeTagMode: .ignore, framingMode: .osc1_1)
+        let server = OSCTCPServer(port: nil, bundleMode: .unwrap(timeTagMode: .ignore), framingMode: .osc1_1)
         try await Task.sleep(seconds: isStable ? 0.1 : 5.0)
         
         try server.start()
@@ -232,7 +232,7 @@ struct OSCTCPServer_Tests {
         // setup client 1
         // (must be done after calling start on server so we have a non-zero local server port to use)
         
-        let client1 = OSCTCPClient(remoteHost: "localhost", remotePort: server.localPort, timeTagMode: .ignore, framingMode: .osc1_1)
+        let client1 = OSCTCPClient(remoteHost: "localhost", remotePort: server.localPort, bundleMode: .unwrap(timeTagMode: .ignore), framingMode: .osc1_1)
         try await Task.sleep(seconds: isStable ? 0.1 : 5.0)
         
         try client1.connect()
@@ -243,7 +243,7 @@ struct OSCTCPServer_Tests {
         // setup client 2
         // (must be done after calling start on server so we have a non-zero local server port to use)
         
-        let client2 = OSCTCPClient(remoteHost: "localhost", remotePort: server.localPort, timeTagMode: .ignore, framingMode: .osc1_1)
+        let client2 = OSCTCPClient(remoteHost: "localhost", remotePort: server.localPort, bundleMode: .unwrap(timeTagMode: .ignore), framingMode: .osc1_1)
         try await Task.sleep(seconds: isStable ? 0.1 : 5.0)
         
         try client2.connect()
@@ -272,7 +272,7 @@ struct OSCTCPServer_Tests {
         let isStable = isSystemTimingStable()
         
         // binding to port 0 or nil will cause the system to assign a random available port
-        let server = OSCTCPServer(port: nil, timeTagMode: .ignore, framingMode: .osc1_1)
+        let server = OSCTCPServer(port: nil, bundleMode: .unwrap(timeTagMode: .ignore), framingMode: .osc1_1)
         try await Task.sleep(seconds: isStable ? 0.1 : 5.0)
         
         try server.start()
@@ -289,7 +289,7 @@ struct OSCTCPServer_Tests {
         // setup client 1
         // (must be done after calling start on server so we have a non-zero local server port to use)
         
-        let client1 = OSCTCPClient(remoteHost: "localhost", remotePort: server.localPort, timeTagMode: .ignore, framingMode: .osc1_1)
+        let client1 = OSCTCPClient(remoteHost: "localhost", remotePort: server.localPort, bundleMode: .unwrap(timeTagMode: .ignore), framingMode: .osc1_1)
         try await Task.sleep(seconds: isStable ? 0.1 : 5.0)
         
         try client1.connect()
@@ -307,7 +307,7 @@ struct OSCTCPServer_Tests {
         // setup server
         
         // binding to port 0 or nil will cause the system to assign a random available port
-        let server = OSCTCPServer(port: nil, timeTagMode: .ignore, framingMode: framingMode)
+        let server = OSCTCPServer(port: nil, bundleMode: .unwrap(timeTagMode: .ignore), framingMode: framingMode)
         try await Task.sleep(seconds: isStable ? 0.1 : 5.0)
         
         try server.start()
@@ -320,7 +320,7 @@ struct OSCTCPServer_Tests {
         
         // client 1
         
-        let client1 = OSCTCPClient(remoteHost: "localhost", remotePort: server.localPort, timeTagMode: .ignore, framingMode: framingMode)
+        let client1 = OSCTCPClient(remoteHost: "localhost", remotePort: server.localPort, bundleMode: .unwrap(timeTagMode: .ignore), framingMode: framingMode)
         try await Task.sleep(seconds: isStable ? 0.1 : 5.0)
         
         try client1.connect()
@@ -331,7 +331,7 @@ struct OSCTCPServer_Tests {
         
         // client 2
         
-        let client2 = OSCTCPClient(remoteHost: "localhost", remotePort: server.localPort, timeTagMode: .ignore, framingMode: framingMode)
+        let client2 = OSCTCPClient(remoteHost: "localhost", remotePort: server.localPort, bundleMode: .unwrap(timeTagMode: .ignore), framingMode: framingMode)
         try await Task.sleep(seconds: isStable ? 0.1 : 5.0)
         
         try client2.connect()

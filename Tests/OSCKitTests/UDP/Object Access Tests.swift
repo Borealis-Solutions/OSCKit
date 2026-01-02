@@ -41,7 +41,7 @@ import Testing
         _ = OSCUDPServer(port: 8006) { message, timeTag, host, port in
             print(message)
         }
-        _ = OSCUDPServer(port: 8007, timeTagMode: .ignore) { message, timeTag, host, port in
+        _ = OSCUDPServer(port: 8007, bundleMode: .unwrap(timeTagMode: .ignore)) { message, timeTag, host, port in
             print(message)
         }
     }
@@ -68,18 +68,18 @@ import Testing
         _ = OSCUDPSocket(localPort: 8010) { message, timeTag, host, port in
             print(message)
         }
-        _ = OSCUDPSocket(localPort: 8011, timeTagMode: .ignore) { message, timeTag, host, port in
+        _ = OSCUDPSocket(localPort: 8011, bundleMode: .unwrap(timeTagMode: .ignore)) { message, timeTag, host, port in
             print(message)
         }
         _ = OSCUDPSocket(
             localPort: 8012,
-            timeTagMode: .ignore
+            bundleMode: .unwrap(timeTagMode: .ignore),
         ) { message, timeTag, host, port in
             print(message)
         }
         _ = OSCUDPSocket(
             localPort: 8013,
-            timeTagMode: .ignore,
+            bundleMode: .unwrap(timeTagMode: .ignore),
             isIPv4BroadcastEnabled: true
         ) { message, timeTag, host, port in
             print(message)
@@ -88,7 +88,7 @@ import Testing
             localPort: 8014,
             remoteHost: "192.168.0.10",
             remotePort: 8000,
-            timeTagMode: .ignore,
+            bundleMode: .unwrap(timeTagMode: .ignore),
             isIPv4BroadcastEnabled: true
         ) { message, timeTag, host, port in
             print(message)
