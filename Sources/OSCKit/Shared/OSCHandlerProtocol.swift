@@ -60,6 +60,7 @@ extension _OSCHandlerProtocol {
                 self._schedule(
                     message,
                     at: timeTag,
+                    timeTagMode: timeTagMode ?? .ignore,
                     remoteHost: remoteHost,
                     remotePort: remotePort
                 )
